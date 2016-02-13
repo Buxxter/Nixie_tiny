@@ -17,17 +17,8 @@ int main(void)
 	shift_init();
 	shift_send_three_reverse_bytes(bytes); // Sends 00:00:00 as fast as it can
 	TIO_Init();
-	//TIO_TextOutput("Hello there!!!\r\n");
-	    
-	if(!(ds1307_init())) 
-	{
-		PORTD |= (1<<4);
-		TIO_TextOutput("ds init error\r\n");
-	}
-	
-	
-	
-	
+		    
+	ds1307_init();	
 	
     while (1) 
     {
@@ -35,7 +26,7 @@ int main(void)
 		ds1307_read(0x02, &bytes[2]);
 		ds1307_read(0x01, &bytes[1]);
 		ds1307_read(0x00, &bytes[0]);
-			
+		
 		shift_send_three_reverse_bytes(bytes);
 		_delay_ms(100);
 		

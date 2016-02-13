@@ -23,7 +23,7 @@ bool ds1307_init(void)
 	if (!(ds1307_write(0x00, tmp))) return false;
 		
 	// Enable SQWE at [see below]
-	if (!(ds1307_write(0x07, 0b00010001))) return false; 
+	if (!(ds1307_write(0x07, 0b00010000))) return false; 
 	
 	//Clock_SetUserData(0x07, 0b00000000); // disabled
 	//Clock_SetUserData(0x07, 0b10010000); // 1Hz
