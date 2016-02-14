@@ -9,6 +9,16 @@
 #define DS_SQW_PORT PORTD
 #define DS_SQW_PIN	6
 
+#define MAX_CMD_LEN 25
+
+int main(void);
+void cycle_display_state(void);
+void update_display(void);
+void init(void);
+
+void uart_recieve_byte(void);
+void send_echo(void);
+void execute_command(void);
 
 
 

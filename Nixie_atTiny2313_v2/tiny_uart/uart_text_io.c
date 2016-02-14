@@ -10,8 +10,8 @@ void TIO_Init(void)
 	UBRRH = (unsigned char)(USART_BAUDRATE>>8);
 	UBRRL = (unsigned char)(USART_BAUDRATE);
 	UCSRA = (1<<U2X);
-	/* Enable receiver and transmitter */
-	UCSRB = (1<<RXEN)|(1<<TXEN);
+	/* Enable receiver and transmitter // + Interrupt on receive byte */
+	UCSRB = (1<<RXEN)|(1<<TXEN); //|(1<<UCSRB);
 	/* Set frame format: 8data, 2stop bit */
 	UCSRC = (1<<USBS)|(3<<UCSZ0);
 
@@ -34,11 +34,11 @@ void TIO_CharOutput(uint8_t ch)
   
 }
 
-void TIO_TextOutput(uint8_t *outtxt)
+void TIO_TextOutput(char *outtxt)
 {
   uint8_t i=0;
 
-  while (outtxt[i]!=0)
+  while (outtxt[i] != 0)
   {
     TIO_CharOutput(outtxt[i]);
 	i++;
