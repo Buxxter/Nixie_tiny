@@ -127,7 +127,7 @@ extern unsigned char i2c_start(unsigned char addr);
  @retval  0 device accessible
  @retval  1 failed to access device
  */
-extern unsigned char i2c_rep_start(unsigned char addr);
+//extern unsigned char i2c_rep_start(unsigned char addr);
 
 
 /**
@@ -137,7 +137,7 @@ extern unsigned char i2c_rep_start(unsigned char addr);
  @param    addr address and transfer direction of I2C device
  @return   none
  */
-extern void i2c_start_wait(unsigned char addr);
+//extern void i2c_start_wait(unsigned char addr);
 
  
 /**

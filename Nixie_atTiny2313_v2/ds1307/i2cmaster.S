@@ -71,7 +71,7 @@
 	.stabs	"i2cmaster.S",100,0,0,i2c_delay_T2
 	.func i2c_delay_T2	; delay 5.0 microsec with 4 Mhz crystal	
 i2c_delay_T2:        ; 3 cycles
-#if F_CPU <= 4000000UL
+/*#if F_CPU <= 4000000UL
 	rjmp 1f      ; 2   "
 1:	rjmp 2f      ; 2   "
 2:	rjmp 3f      ; 2   "
@@ -79,22 +79,11 @@ i2c_delay_T2:        ; 3 cycles
 4:	rjmp 5f      ; 2   "
 5: 	rjmp 6f      ; 2   "
 6:	nop          ; 1   "
-	ret          ; 4   "  total 20 cyles = 5.0 microsec with 4 Mhz crystal 
-#elif F_CPU <= 8000000UL
+	ret          ; 4   "  total 20 cyles = 5.0 microsec with 4 Mhz crystal */
+#if F_CPU <= 8000000UL
     push r24     ; 2 cycle
     ldi	 r24, 7  ; 1 cycle
 	nop          ; 1 cycle
-
-/*	nop          ; 1 cycle
-	nop          ; 1 cycle
-	nop          ; 1 cycle
-	nop          ; 1 cycle
-	nop          ; 1 cycle
-	nop          ; 1 cycle
-	nop          ; 1 cycle
-	nop          ; 1 cycle
-	nop          ; 1 cycle
-	nop          ; 1 cycle*/
 
 1:	sbiw r24, 1  ; 2 cycle
 	brne 1b      ; 2 or 1 cycle, 4 cycles per loop
@@ -170,7 +159,7 @@ i2c_start:
 ; extern unsigned char i2c_rep_start(unsigned char addr);
 ;	addr = r24,  return = r25(=0):r24
 ;*************************************************************************
-
+/*
 	.global i2c_rep_start
 	.func	i2c_rep_start
 i2c_rep_start:
@@ -187,7 +176,7 @@ i2c_rep_start:
 	ret
 	.endfunc
 
-
+*/
 ;*************************************************************************	
 ; Issues a start condition and sends address and transfer direction.
 ; If device is busy, use ack polling to wait until device is ready
@@ -195,7 +184,7 @@ i2c_rep_start:
 ; extern void i2c_start_wait(unsigned char addr);
 ;	addr = r24
 ;*************************************************************************
-
+/*
 	.global i2c_start_wait
 	.func   i2c_start_wait
 i2c_start_wait:
@@ -212,7 +201,7 @@ i2c_start_wait1:
 i2c_start_wait_done:
 	ret
 	.endfunc	
-
+*/
 
 ;*************************************************************************
 ; Terminates the data transfer and releases the I2C bus
