@@ -62,20 +62,12 @@ void update_display(void)
 	switch(display_sate)
 	{
 		case 0:
-			ds1307_read(0x02, &display_bcd[2]); // Hours
-			display_bcd[2] &= ~(1<<6);
-			
-			ds1307_read(0x01, &display_bcd[1]); // Minutes
-			ds1307_read(0x00, &display_bcd[0]); // Seconds
-			display_bcd[0] &= ~(1<<7);
+			ds1307_read(0x00, display_bcd, 3);	// [Seconds, Minutes, Hours]
+			display_bcd[2] &= ~(1<<6); // Remove 12/24 from Hours
+			display_bcd[0] &= ~(1<<7); // Remove CH from Seconds
 			break;
 		case 1:
-			//ds1307_read(0x06, &display_bcd[2]); // year
-			//display_bcd[2] &= ~((1<<7)|(1<<6));
-			
-			ds1307_read(0x05, &display_bcd[2]); // month
-			ds1307_read(0x04, &display_bcd[1]); // date
-			ds1307_read(0x03, &display_bcd[0]); // day of week
+			ds1307_read(0x03, display_bcd, 3); // [day of week, Day, Month]
 			break;
 		default:
 			break;

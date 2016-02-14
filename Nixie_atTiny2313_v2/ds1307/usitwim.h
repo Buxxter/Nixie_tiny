@@ -15,14 +15,11 @@
 
 #include <stdint.h>
 
-#include "../owowod/owowod.h"
-#include "../owowod/debugging.h"
-
 //********** Defines **********//
 
 // Defines controlling timing limits - SCL <= 100KHz.
 
-#define SYS_CLK   1000.0  // [kHz]	Default for ATtiny2313
+//#define SYS_CLK   8000.0  // [kHz]	Default for ATtiny2313
 
 // For use with _delay_us()
 #define T2_TWI    5 		// >4,7us
@@ -91,6 +88,9 @@
     #define PIN_USI_SCL         PINB7
 #endif
 
+// ============================================================================
+#define USITWIM_RESULT_SUCCESS 0x00
+#define USITWIM_RESULT_FAILURE 0xFF
 // ============================================================================
 
 void usitwim_init(void);

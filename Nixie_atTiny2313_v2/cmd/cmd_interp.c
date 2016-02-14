@@ -40,15 +40,7 @@ void split_args(uint8_t* cmdline)
 //Extract and start appropriate fn
 uint8_t cmd_exec(uint8_t *cmdline)
 {
-	TIO_TextOutput(cmdline);
-	TIO_TextOutput("|\r\n");
 	split_args(cmdline);
-	
-	TIO_TextOutput(cmdline);
-	TIO_TextOutput(" / ");
-	TIO_CharOutput('0'+args_num);
-	TIO_TextOutput("\r\n");
-	
 
 	if (str_equal(cmdline, "date"))
 	{	

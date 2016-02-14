@@ -11,7 +11,7 @@ void TIO_Init(void)
 	UBRRL = (unsigned char)(USART_BAUDRATE);
 	UCSRA = (1<<U2X);
 	/* Enable receiver and transmitter // + Interrupt on receive byte */
-	UCSRB = (1<<RXEN)|(1<<TXEN); //|(1<<UCSRB);
+	UCSRB = (1<<RXEN)|(1<<TXEN)|(1<<RXCIE);
 	/* Set frame format: 8data, 2stop bit */
 	UCSRC = (1<<USBS)|(3<<UCSZ0);
 

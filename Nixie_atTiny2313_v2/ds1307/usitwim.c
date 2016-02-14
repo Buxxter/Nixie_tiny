@@ -8,17 +8,17 @@
  *
  */
 
-#include <avr/interrupt.h>
-#define F_CPU 1000000UL		  // Sets up the default speed for delay.h
+#include "../main.h"
+//#include <avr/interrupt.h>
+//#define F_CPU 1000000UL		  // Sets up the default speed for delay.h
 #include <util/delay.h>
-#include <avr/io.h>
+//#include <avr/io.h>
 
 #include "usitwim.h"
 
 // ============================================================================
 
-#define USITWIM_RESULT_SUCCESS 0x00
-#define USITWIM_RESULT_FAILURE 0xFF
+
 
 // ----------------------------------------------------------------------------
 
@@ -58,11 +58,11 @@ uint8_t usitwim_data_write(uint8_t device_addr, uint8_t *data_buffer, uint8_t da
 	uint8_t result_code = USI_TWI_Start_Read_Write(data_buffer, data_size);
 	// /*DEBUGGING*/ owowod_print_char(data_buffer[0]);
 	// /*DEBUGGING*/ owowod_print_char(data_buffer[1]);
-	if (result_code != USITWIM_RESULT_SUCCESS) {
-		/*DEBUGGING*/ DEBUGGING_ERROR(result_code, "usitwim_data_write");
-	} else {
-	//	/*DEBUGGING*/ owowod_print_string("(w:ok)");
-	}
+	//if (result_code != USITWIM_RESULT_SUCCESS) {
+		///*DEBUGGING*/ DEBUGGING_ERROR(result_code, "usitwim_data_write");
+	//} else {
+	////	/*DEBUGGING*/ owowod_print_string("(w:ok)");
+	//}
 	return result_code;
 }
 
@@ -72,11 +72,11 @@ uint8_t usitwim_data_read(uint8_t device_addr, uint8_t *data_buffer, uint8_t dat
 	uint8_t result_code = USI_TWI_Start_Read_Write(data_buffer, data_size);
 	// /*DEBUGGING*/ owowod_print_char(data_buffer[0]);
 	// /*DEBUGGING*/ owowod_print_char(data_buffer[1]);
-	if (result_code != USITWIM_RESULT_SUCCESS) {
-		/*DEBUGGING*/ DEBUGGING_ERROR(result_code, "usitwim_data_read");
-	} else {
-	//	/*DEBUGGING*/ owowod_print_string("(r:ok)");
-	}
+	//if (result_code != USITWIM_RESULT_SUCCESS) {
+		///*DEBUGGING*/ DEBUGGING_ERROR(result_code, "usitwim_data_read");
+	//} else {
+	////	/*DEBUGGING*/ owowod_print_string("(r:ok)");
+	//}
 	return result_code;
 }
 
