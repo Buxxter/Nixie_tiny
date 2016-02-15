@@ -4,7 +4,7 @@
 #define F_CPU 8000000UL
 #include <compat/deprecated.h>
 #include "tiny_uart/uart_text_io.h"
-#include "cbuf/cbuf.h"
+//#include "cbuf/cbuf.h"
 
 #define DS_SQW_DDR	DDRD
 #define DS_SQW_PORT PORTD

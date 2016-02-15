@@ -130,6 +130,9 @@
     <Compile Include="cbuf\cbuf.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="cbuf\fifo.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="cmd\cmd_interp.c">
       <SubType>compile</SubType>
     </Compile>

@@ -12,6 +12,8 @@
 #include "ds1307/ds1307.h"
 #include "rtos/rtos.h"
 #include "cmd/cmd_interp.h"
+//#include "cbuf/cbuf.h"
+#include "cbuf/fifo.h"
 
 #define DISPLAY_TIMEOUT		5	// In MainTimer cycles
 #define DISPLAY_DATE_EVERY	13	// In MainTimer cycles
@@ -19,9 +21,14 @@
 uint8_t display_bcd[3] = {0,0,0};
 volatile bool next_second = false;
 
+#if defined(CBUF_H)
+	cbf_t Rx_buffer;
+	cbf_t Tx_buffer;
+#elif defined(FIFO_H_)
+	FIFO(16) Rx_buffer;
+	FIFO(16) Tx_buffer;
+#endif
 
-uint8_t rx_index = 0;
-uint8_t rx_buffer[MAX_CMD_LEN + 1] = "";
 
 uint8_t display_sate = 1; // 0 - time, 1 - date, 2 - custom
 
@@ -38,7 +45,12 @@ int main(void)
     {
 		wdt_reset();
 		TaskManager();
-		//uart_recieve_byte();
+		
+		#if defined(CBUF_H)
+			if (!cbf_isempty(&Tx_buffer))	UCSRB |= (1<<UDRIE);
+		#elif defined(FIFO_H_)
+			if (!FIFO_IS_EMPTY(Tx_buffer))  UCSRB |= (1<<UDRIE);
+		#endif	
     }
 }
 
@@ -82,7 +94,7 @@ void update_display(void)
 void init(void)
 {
 	shift_init();
-	shift_send_three_reverse_bytes(display_bcd); // Sends 00:00:00 as fast as it can
+	//shift_send_three_reverse_bytes(display_bcd); // Sends 00:00:00 as fast as it can
 	
 	cbi(DS_SQW_DDR, DS_SQW_PIN); // configure as input
 	cbi(DS_SQW_PORT, DS_SQW_PIN); // disable pullup (need to be enabled if no external pullup)
@@ -101,45 +113,59 @@ void init(void)
 	
 	rtos_init();
 	
+	#if defined(CBUF_H)
+		cbf_init(&Rx_buffer);
+		cbf_init(&Tx_buffer);
+	#endif
+
+	
 }
+
 
 ISR(TIMER1_CAPT_vect)
 {
 	TimerService();
 }
 
-void send_echo(void)
+ISR(USART_RX_vect)
 {
-	TIO_CharOutput(rx_buffer[rx_index - 1]);
+	uint8_t rx_byte = UDR;
+	#if defined(CBUF_H)
+		cbf_put(&Tx_buffer, rx_byte); // echo
+		cbf_put(&Rx_buffer, rx_byte);
+	#elif defined(FIFO_H_)
+		FIFO_PUT(Tx_buffer, rx_byte);
+		FIFO_PUT(Rx_buffer, rx_byte);
+	#endif
+}
+
+
+ISR(USART_UDRE_vect)
+{
+	#if defined(CBUF_H)
+		if (cbf_isempty(&Tx_buffer))
+		{
+			UCSRB &= ~(1<<UDRIE);
+		} else {
+			UDR = cbf_get(&Tx_buffer);
+		}
+	#elif defined(FIFO_H_)
+		if (FIFO_IS_EMPTY(Tx_buffer))
+		{
+			UCSRB &= ~(1<<UDRIE);
+		} else {
+			UDR = FIFO_GET(Tx_buffer);
+		}
+	#endif
+	
+		
 }
 
 void execute_command(void)
 {
 	TIO_TextOutput("\r\n");
-	cmd_exec(rx_buffer);
-	rx_index = 0;
-	TIO_TextOutput("\r\n");
+	//cmd_exec(rx_buffer);
+	//rx_index = 0;
+	//TIO_TextOutput("\r\n");
 }
 
-void uart_recieve_byte(void)
-{
-	if (!(UCSRA & (1<<RXC)))
-	{
-		return;
-	}
-	unsigned char rxbyte = UDR;
-	
-	if (rxbyte == '\r' || rx_index >= MAX_CMD_LEN)
-	{
-		rx_buffer[rx_index] = 0;
-		rx_index = 0;
-		AddTask(execute_command);
-	} else if (rxbyte != '\n')
-	{
-		rx_buffer[rx_index] = rxbyte;
-		rx_index++;
-		send_echo();
-	}
-	
-	
-}

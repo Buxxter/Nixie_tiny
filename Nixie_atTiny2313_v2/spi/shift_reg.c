@@ -20,9 +20,9 @@ void shift_init(void)
 	SHIFT_DS_LOW;
 	SHIFT_SH_LOW;
 	SHIFT_SH_HIGH;
-	shift_sendbyte(0, true, false);
-	shift_sendbyte(0, false, false);
-	shift_sendbyte(0, false,true);
+	shift_sendbyte(0xFF, true, false);
+	shift_sendbyte(0xFF, false, false);
+	shift_sendbyte(0xFF, false, true);
 	
 }
 
