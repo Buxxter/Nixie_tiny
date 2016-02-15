@@ -15,17 +15,17 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define SHIFT_DS_PORT	PORTA
-#define SHIFT_ST_PORT	PORTA
-#define SHIFT_SH_PORT	PORTD
+#define SHIFT_DS_MO_PORT		PORTA
+#define SHIFT_ST_SS_PORT		SPI_SS_ST_PORT
+#define SHIFT_SH_SC_PORT		PORTD
 
-#define SHIFT_DS_DDR	DDRA
-#define SHIFT_ST_DDR	DDRA
-#define SHIFT_SH_DDR	DDRD
+#define SHIFT_DS_MO_DDR		DDRA
+#define SHIFT_ST_SS_DDR		SPI_SS_ST_DDR
+#define SHIFT_SH_SC_DDR		DDRD
 
-#define SHIFT_DS_PIN	1
-#define SHIFT_ST_PIN	0
-#define SHIFT_SH_PIN	2
+#define SHIFT_DS_MO_PIN		1
+#define SHIFT_ST_SS_PIN		SPI_SS_ST_PIN
+#define SHIFT_SH_SC_PIN		2
 
 void shift_init(void);
 void shift_sendbyte(uint8_t byte, bool isFrist, bool isLast);

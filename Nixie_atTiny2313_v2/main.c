@@ -9,6 +9,7 @@
 #include <stdbool.h>
 
 #include "spi/shift_reg.h"
+//#include "spi/usi_spi.h"
 #include "ds1307/ds1307.h"
 #include "rtos/rtos.h"
 #include "cmd/cmd_interp.h"
@@ -85,16 +86,35 @@ void update_display(void)
 			break;
 	}
 	
-	
-	shift_send_three_reverse_bytes(display_bcd);
+	#if defined(SHIFT_REG_H_)
+		shift_send_three_reverse_bytes(display_bcd);
+	#elif defined(USI_SPI_H_)
+		SPI_SS_LOW;
+		usi_spi_send_receive(~(display_bcd[0]));
+		usi_spi_send_receive(~(display_bcd[1]));
+		usi_spi_send_receive(~(display_bcd[2]));
+		SPI_SS_HIGH;
+	#endif
+		
 	
 	AddTimerTask(update_display, 1);
 }
 
 void init(void)
 {
-	shift_init();
-	//shift_send_three_reverse_bytes(display_bcd); // Sends 00:00:00 as fast as it can
+	#if defined(SHIFT_REG_H_)
+		shift_init();
+		//shift_send_three_reverse_bytes(display_bcd); // Sends 00:00:00 as fast as it can
+	#elif defined(USI_SPI_H_)
+		SPI_SS_ST_DDR |= (1<<SPI_SS_ST_PIN);
+		usi_spi_master_init();
+		SPI_SS_LOW;
+		usi_spi_send_receive(0xFF);
+		usi_spi_send_receive(0xFF);
+		usi_spi_send_receive(0xFF);
+		SPI_SS_HIGH;
+	#endif
+		
 	
 	cbi(DS_SQW_DDR, DS_SQW_PIN); // configure as input
 	cbi(DS_SQW_PORT, DS_SQW_PIN); // disable pullup (need to be enabled if no external pullup)
@@ -163,7 +183,7 @@ ISR(USART_UDRE_vect)
 
 void execute_command(void)
 {
-	TIO_TextOutput("\r\n");
+	//TIO_TextOutput("\r\n");
 	//cmd_exec(rx_buffer);
 	//rx_index = 0;
 	//TIO_TextOutput("\r\n");

@@ -33,7 +33,7 @@ void TIO_Init(void);
 uint8_t TIO_CharInput(void);
 void TIO_CharOutput(uint8_t ch);
 //Text I/O. Input supports backspace.
-void TIO_TextOutput(char *outtxt);
+void TIO_TextOutput(uint8_t *outtxt);
 void TIO_TextInput(uint8_t *intxt);
 //Sends string from FLASH.
 void TIO_PrintPgmMsg(const uint8_t* pgm_msg);

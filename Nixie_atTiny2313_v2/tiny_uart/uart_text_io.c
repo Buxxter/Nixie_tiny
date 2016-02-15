@@ -34,7 +34,7 @@ void TIO_CharOutput(uint8_t ch)
   
 }
 
-void TIO_TextOutput(char *outtxt)
+void TIO_TextOutput(uint8_t *outtxt)
 {
   uint8_t i=0;
 

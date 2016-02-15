@@ -10,6 +10,13 @@
 #define DS_SQW_PORT PORTD
 #define DS_SQW_PIN	6
 
+#define SPI_SS_ST_PORT	PORTA
+#define SPI_SS_ST_DDR	DDRA
+#define SPI_SS_ST_PIN	0
+
+#define SPI_SS_LOW		SPI_SS_ST_PORT &= (~(1<<SPI_SS_ST_PIN))
+#define SPI_SS_HIGH		SPI_SS_ST_PORT |= ((1<<SPI_SS_ST_PIN))
+
 #define MAX_CMD_LEN 16
 
 
