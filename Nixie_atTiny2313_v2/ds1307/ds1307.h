@@ -4,7 +4,14 @@
 #include <stdbool.h>
 #include "i2cmaster.h"
 
-#define DS1307_ADDR 0XD0
+#define _DS3231_
+
+#if defined(_DS1307_)
+	#define DS1307_ADDR 0XD0
+#elif defined(_DS3231_)
+	#define DS1307_ADDR 0xD0
+#endif
+
 
 //#define bit_is_clear(port, bit)		(!(port & (1<<bit)))
 //#define bit_is_set(port, bit)		(port & (1<<bit))

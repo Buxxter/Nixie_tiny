@@ -16,6 +16,7 @@ void TIO_Init(void)
 	UCSRC = (1<<USBS)|(3<<UCSZ0);
 
 }
+/*
 
 uint8_t TIO_CharInput(void)
 {
@@ -26,10 +27,10 @@ uint8_t TIO_CharInput(void)
 
 void TIO_CharOutput(uint8_t ch)
 {
-	/* Wait for empty transmit buffer */
+	// Wait for empty transmit buffer
 	while ( !( UCSRA & (1<<UDRE)) )
 	;
-	/* Put data into buffer, sends the data */
+	// Put data into buffer, sends the data
 	UDR = ch;
   
 }
@@ -109,3 +110,4 @@ void TIO_PrintPgmMsg(const uint8_t* pgm_msg)
 
   }while (ch!=0);
 }
+*/

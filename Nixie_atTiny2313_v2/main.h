@@ -23,14 +23,19 @@
 
 int main(void);
 void cycle_display_state(void);
+void second_tick_task(void);
 void update_display(void);
 void init(void);
 
 void flush_tx(void);
 
-void usart_sendString(char *str);
+void usart_sendString(uint8_t *string);
 void execute_command(void);
 
+#ifdef _TIME_HARD_SETUP_
+void time_first_setup(void);
+#endif
 
+void send_curr_display(void);
 
 #endif /* MAIN_H_ */

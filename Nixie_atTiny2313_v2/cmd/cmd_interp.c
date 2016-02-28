@@ -31,10 +31,10 @@ void split_args(uint8_t* cmdline)
 		}
 	}
 
-	for (i=0; i<MAX_CMD_LEN; i++)
-	{
-		if (cmdline[i]==' ')	cmdline[i]=0;
-	}
+	//for (i=0; i<MAX_CMD_LEN; i++)
+	//{
+		//if (cmdline[i]==' ')	cmdline[i]=0;
+	//}
 }
 
 //Extract and start appropriate fn
@@ -46,36 +46,34 @@ uint8_t cmd_exec(uint8_t *cmdline)
 	{	
 		if (args_num == 0)
 		{
-			TIO_TextOutput("don't know yet\r\n");
+			//TIO_TextOutput("don't know yet\r\n");
+			usart_sendString("cgy\r\n");
 			return 0;
 		}
 		else 
 		{
-			uint8_t i;
-			if (args_num == 3)
+			if (args_num == 1)
 			{
-				for (i=0; i<args_num; i++)
-				{
-					TIO_TextOutput(arg_ptr[i]);
-					TIO_CharOutput('\r');
-					TIO_CharOutput('\n');
-				}
-			} else if (args_num == 4)
+				usart_sendString(arg_ptr[0]);
+				usart_sendString("\r\n");
+			} 
+			//else if (args_num == 3)
+			//{
+				//for (i=0; i<args_num; i++)
+				//{
+					//usart_sendString(arg_ptr[i]);
+					//usart_sendString("\r\n");
+				//}
+			//} 
+			else
 			{
-				for (i=0; i<args_num; i++)
-				{
-					TIO_TextOutput(arg_ptr[i]);
-					TIO_CharOutput('\r');
-					TIO_CharOutput('\n');
-				}
-			} else
-			{
-				TIO_TextOutput("Unk date\r\n");
+				usart_sendString("hlp\r\n");
+				//usart_sendString("date [YY MM DD");
+				//usart_sendString("|DayOfWeek]\r\n");
 			}
 		}
 		return 1;
 	}
-	TIO_TextOutput("Un ");
-	TIO_TextOutput(cmdline);
+	
 	return 0;
 }

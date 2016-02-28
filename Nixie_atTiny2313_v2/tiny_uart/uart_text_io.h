@@ -29,6 +29,10 @@ responsibility on anything that could happen while using this code.
 
 //UART initialization
 void TIO_Init(void);
+
+
+/*
+
 //Char I/O
 uint8_t TIO_CharInput(void);
 void TIO_CharOutput(uint8_t ch);
@@ -37,5 +41,7 @@ void TIO_TextOutput(uint8_t *outtxt);
 void TIO_TextInput(uint8_t *intxt);
 //Sends string from FLASH.
 void TIO_PrintPgmMsg(const uint8_t* pgm_msg);
+
+*/
 
 #endif

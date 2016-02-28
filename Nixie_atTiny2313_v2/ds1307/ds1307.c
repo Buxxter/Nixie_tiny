@@ -15,20 +15,31 @@ bool ds1307_init(void)
 	tmp &= ~(1<<6);
 	if (!(ds1307_write(0x02, &tmp, 1))) return false;
 	
-	// set ClockHalt (CH) to 0
-	if (!(ds1307_read(0x00, &tmp, 1))) return false;
-	tmp &= ~(1<<7);
-	if (!(ds1307_write(0x00, &tmp, 1))) return false;
+	#if defined(_DS1307_)
 		
-	// Enable SQWE at [see below]
-	tmp = 0b00010000;
-	if (!(ds1307_write(0x07, &tmp, 1))) return false; 
+		// set ClockHalt (CH) to 0
+		if (!(ds1307_read(0x00, &tmp, 1))) return false;
+		tmp &= ~(1<<7);
+		if (!(ds1307_write(0x00, &tmp, 1))) return false;
 	
-	//Clock_SetUserData(0x07, 0b00000000); // disabled
-	//Clock_SetUserData(0x07, 0b10010000); // 1Hz
-	//Clock_SetUserData(0x07, 0b10010001); // 4.096kHz
-	//Clock_SetUserData(0x07, 0b10010010); // 8.192kHz
-	//Clock_SetUserData(0x07, 0b10010011); // 32.768kHz
+		// Enable SQWE at [see below]
+		tmp = 0b00010000;
+		if (!(ds1307_write(0x07, &tmp, 1))) return false;
+	
+		//Clock_SetUserData(0x07, 0b00000000); // disabled
+		//Clock_SetUserData(0x07, 0b10010000); // 1Hz
+		//Clock_SetUserData(0x07, 0b10010001); // 4.096kHz
+		//Clock_SetUserData(0x07, 0b10010010); // 8.192kHz
+		//Clock_SetUserData(0x07, 0b10010011); // 32.768kHz
+		
+	#elif defined(_DS3231_)
+	
+		tmp = 0b00000000; //1Hz, no alarms
+		if (!(ds1307_write(0x0E, &tmp, 1))) return false;
+		
+	#endif // _DS1307
+	
+	
 	
 	
 	return true;
