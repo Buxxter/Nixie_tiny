@@ -6,8 +6,6 @@
 #define _MACROS_
 
 
-//#define _TIME_HARD_SETUP_
-
 
 #ifdef _INCLUDES_
 
@@ -22,10 +20,9 @@
 #include "spi/shift_reg.h"
 //#include "spi/usi_spi.h"
 #include "ds1307/ds1307.h"
+#include "ds1307/at24c32.h"
 #include "rtos/rtos.h"
 //#include "cmd/cmd_interp.h"
-//#include "cbuf/cbuf.h"
-#include "cbuf/fifo.h"
 
 #endif // _INCLUDES_
 
@@ -64,11 +61,12 @@
 #ifdef _VARIABLES_
 
 uint8_t display_bcd[3] = {0,0,0};
+uint8_t backlight[3] = {255,255,255};
 volatile bool next_second = false;
 uint8_t display_sate = 1; // 0 - time, 1 - date, 2 - custom
 uint8_t setup_state = 0; // 0 - normal, 1 - Year, 2 - month, 3 - day, 4 - day of week, 5 - hours, 6 - minutes
 
-uint8_t current_month = 1;
+//uint8_t current_month = 1;
 
 #if defined(CBUF_H)
 	cbf_t Rx_buffer;
@@ -77,6 +75,26 @@ uint8_t current_month = 1;
 	FIFO(16) Rx_buffer;
 	FIFO(16) Tx_buffer;
 #endif
+
+#endif
+
+#ifndef _DS1307_
+#include <avr/pgmspace.h>
+
+const uint8_t backlight_consts[] PROGMEM = { \
+	1,1,254,	\
+	1,150,254,	\
+	1,254,150,	\
+	1,254,1,	\
+	150,254,1,	\
+	254,150,1,	\
+	254,1,1,	\
+	254,150,1,	\
+	254,254,1,	\
+	254,150,1,	\
+	254,1,150,	\
+	1,50,254	\
+};
 
 #endif
 
@@ -137,6 +155,9 @@ int main(void)
 	
 	#ifdef _TIME_HARD_SETUP_
 	time_first_setup();
+	#endif
+	#ifdef _BACKLIGHT_SETUP_
+	backlight_first_setup();
 	#endif
 	
 	sei();
@@ -204,26 +225,41 @@ void second_tick_task(void)
 			break;
 	}
 	
-	send_curr_display();
+	//send_curr_display();
 	
 	AddTimerTask(second_tick_task, 1);
 }
 
 void update_display(void)
 {
+	uint8_t current_month_addr;
 	switch(display_sate)
 	{
 		case 0:
 			ds1307_read(0x00, display_bcd, 3);	// [Seconds, Minutes, Hours]
 			display_bcd[2] &= ~(1<<6); // Remove 12/24 from Hours
-			display_bcd[0] &= ~(1<<7); // Remove CH from Seconds
+			display_bcd[0] &= ~(1<<7); // Remove CH from Seconds			
 			break;
 		case 1:
 			switch(setup_state)
 			{
 				case 0:
 					ds1307_read(0x03, display_bcd, 3); // [day of week, Day, Month]
-					current_month = (((display_bcd[2])>>4)*10) + ((display_bcd[2]) & 0b00001111);
+					
+					current_month_addr = ((display_bcd[0] & 0b00001111) - 1) * 3;
+					#if defined(_DS3231_)
+					
+						backlight[0] = pgm_read_byte(&(backlight_consts[current_month_addr]));
+						backlight[1] = pgm_read_byte(&(backlight_consts[current_month_addr + 1]));
+						backlight[2] = pgm_read_byte(&(backlight_consts[current_month_addr + 2]));
+					
+						//at24c32_read(0, (current_month_addr) * 3, &backlight[0], 1);
+						//at24c32_read(0, ((current_month_addr) * 3) + 1, &backlight[1], 1);
+						//at24c32_read(0, ((current_month_addr) * 3) + 2, &backlight[2], 1);
+					
+					#elif defined(_DS1307_)
+						ds1307_read((0x08) + current_month_addr, backlight, 3);
+					#endif
 					break;
 				case 4: // day of week
 					ds1307_read(0x03, display_bcd, 1); // [day of week]
@@ -239,6 +275,7 @@ void update_display(void)
 		default:
 			break;
 	}
+	update_backlight();
 	
 	#if defined(SHIFT_REG_H_)
 		shift_send_three_reverse_bytes(display_bcd);
@@ -272,14 +309,7 @@ void init(void)
 	cbi(DS_SQW_PORT, DS_SQW_PIN); // disable pullup (need to be enabled if no external pullup)
 	
 	
-	TCCR1A = (0<<WGM11)|(0<<WGM10);
-	TCCR1B = (0<<WGM13)|(0<<WGM12)|(0<<ICNC1)|(1<<ICES1); // normal port operation; disable noise canceller on ICP1; rising edge;
-	
-	//TCCR1B |= (0<<CS12)|(0<<CS11)|(1<<CS10); // clk/1
-	
-	TIMSK = (1<<ICIE1);	// InputCapture Interrupt Enable
-	
-	
+	hardware_timers_init();	
 	ds1307_init();
 	TIO_Init();
 	
@@ -293,16 +323,54 @@ void init(void)
 	
 }
 
-void pwm_init(void)
+void hardware_timers_init(void)
 {
-	//// Timer0 fast PWM, clk/1
-	//
-	//// Timer1 fast PWM 8-bit, clk/1
-	//TCCR1A = (0<<WGM11)|(1<<WGM10);
-	//TCCR1B = (0<<WGM13)|(1<<WGM12)|(0<<CS12)|(0<<CS11)|(1<<CS10);
-	//
 	
 	
+	//TCCR1A = (0<<WGM11)|(0<<WGM10);
+	TCCR1B = (0<<WGM13)|(0<<WGM12)|(0<<ICNC1)|(1<<ICES1); // normal port operation; disable noise canceller on ICP1; rising edge;
+	
+	//TCCR1B |= (0<<CS12)|(0<<CS11)|(1<<CS10); // clk/1
+	
+	TIMSK = (1<<ICIE1);	// InputCapture Interrupt Enable
+	
+	// =========
+	// Timer1 fast PWM 8-bit, clk/1
+	TCCR1A = (0<<WGM11)|(1<<WGM10); // fastPWM 8-bit
+	TCCR1B |= (0<<WGM13)|(1<<WGM12); // fastPWM 8-bit
+	
+	#if defined(_BACKLIGHT_AND_)
+		TCCR1A |= (1<<COM1A1)|(0<<COM1A0)|(1<<COM1B1)|(0<<COM1B0);	// Clear OC1A on CompareMatch, set on TOP
+																	// Clear OC1B on CompareMatch, set on TOP
+	#elif defined(_BACKLIGHT_KAT_)
+		TCCR1A |= (1<<COM1A1)|(1<<COM1A0)|(1<<COM1B1)|(1<<COM1B0);	// Set OC1A on CompareMatch, clear on TOP
+																	// Set OC1B on CompareMatch, clear on TOP
+	#endif
+	
+	TCCR1B |= (0<<CS12)|(0<<CS11)|(1<<CS10); // clk/1
+	
+	
+	// Timer0 fast PWM, clk/1
+	#if defined(_BACKLIGHT_AND_)
+		TCCR0A  = (1<<COM0A1)|(0<<COM0A0);		// Clear OC0A on CompareMatch, set on TOP
+	#elif defined(_BACKLIGHT_KAT_)
+		TCCR0A  = (1<<COM0A1)|(1<<COM0A0);		// Set OC0A on CompareMatch, clear on TOP
+	#endif
+	
+	TCCR0A &= ~((1<<COM0B1)|(1<<COM0B0));	// OC0B normal port operation
+	TCCR0A |= (1<<WGM01)|(1<<WGM00);		// fastPWM
+	
+	TCCR0B = (0<<CS02)|(0<<CS01)|(1<<CS00);	// clk/1	
+	
+	DDRB |= (1<<PINB4)|(1<<PINB3)|(1<<PINB2);
+		
+}
+
+void update_backlight(void)			// (uint8_t red, uint8_t green, uint8_t blue)
+{
+	OCR0A = backlight[0]; // red;
+	OCR1A = backlight[1]; // green;
+	OCR1B =	backlight[2]; // blue;
 }
 
 void execute_command(void)
@@ -364,6 +432,8 @@ void execute_command(void)
 
 void usart_sendString(uint8_t *string)
 {
+	#if defined(FIFO_H_)
+	
 	uint8_t i = 0;
 	while(!FIFO_IS_FULL(Tx_buffer) && string[i] != '\0')
 	{
@@ -372,6 +442,10 @@ void usart_sendString(uint8_t *string)
 	}
 	// Try to send immediately
 	UCSRB |= (1<<UDRIE);
+	
+	#elif defined(CBUF_H)
+	
+	#endif
 	
 }
 
@@ -519,11 +593,34 @@ void time_first_setup(void)
 	tmp = DEC2BCD(16);	// year
 	ds1307_write(0x04, &tmp, 1);
 	
+}
+#endif
+
+#ifdef _BACKLIGHT_SETUP_
+void backlight_first_setup(void)
+{
+	uint8_t tmp[36] = { \
+						0,0,254,	\
+						0,150,254,	\
+						0,254,150,	\
+						0,254,0,	\
+						150,254,0,	\
+						254,150,0,	\
+						254,0,0,	\
+						254,150,0,	\
+						254,254,0,	\
+						254,150,0,	\
+						254,0,150,	\
+						0,50,254	\
+		};
+	
+	at24c32_write(0, 3, tmp, 36);
 	
 	
 	
 }
 #endif
+
 
 void send_curr_display(void)
 {

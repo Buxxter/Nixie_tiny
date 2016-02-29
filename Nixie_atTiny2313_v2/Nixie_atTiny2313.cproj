@@ -145,6 +145,12 @@
     <Compile Include="cmd\cmd_util.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="ds1307\at24c32.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="ds1307\at24c32.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="ds1307\ds1307.c">
       <SubType>compile</SubType>
     </Compile>
@@ -155,6 +161,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="ds1307\i2cmaster.S">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="hardware.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="main.c">

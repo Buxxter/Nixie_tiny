@@ -1,6 +1,8 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
+#include "hardware.h"
+
 #define F_CPU 8000000UL
 #include <compat/deprecated.h>
 #include "tiny_uart/uart_text_io.h"
@@ -26,6 +28,8 @@ void cycle_display_state(void);
 void second_tick_task(void);
 void update_display(void);
 void init(void);
+void hardware_timers_init(void);
+void update_backlight(void);	// (uint8_t red, uint8_t green, uint8_t blue);
 
 void flush_tx(void);
 
@@ -34,6 +38,9 @@ void execute_command(void);
 
 #ifdef _TIME_HARD_SETUP_
 void time_first_setup(void);
+#endif
+#ifdef _BACKLIGHT_SETUP_
+void backlight_first_setup(void);
 #endif
 
 void send_curr_display(void);
