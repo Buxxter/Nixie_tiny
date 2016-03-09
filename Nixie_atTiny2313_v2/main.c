@@ -33,7 +33,7 @@
 #ifdef _DEFINES_
 
 #define DISPLAY_TIMEOUT		5	// In MainTimer cycles
-#define DISPLAY_DATE_EVERY	255	// In MainTimer cycles
+#define DISPLAY_DATE_EVERY	17	// In MainTimer cycles
 
 #define DIGITS_1_PORT	PORTD
 #define DIGITS_2_PORT	PORTD
@@ -206,42 +206,59 @@ int main(void)
 
 void digits_dimmer(void)
 {
+	static uint8_t dim_counter;
+	#define DIM_CUT 3
+	
 	uint8_t del1 = 1;
 	uint8_t del2 = 1;
-	if (dim_digits == 0) 
+	//if (dim_digits == 0) 
+	//{
+		////DIGITS_ALL_ON;
+		//
+		//DIGITS_ALL_OFF;
+		//DIGITS_1_ON;
+		//_delay_ms(del1);
+		//DIGITS_1_OFF;
+		//_delay_ms(del2);
+		//DIGITS_2_ON;
+		//_delay_ms(del1);
+		//DIGITS_2_OFF;
+		//_delay_ms(del2);
+		//DIGITS_3_ON;
+		//_delay_ms(del1);
+		//DIGITS_3_OFF;
+		//_delay_ms(del2);
+		//return;
+	//}
+	
+	DIGITS_ALL_OFF;	
+	if ((dim_counter < DIM_CUT) || !((1<<2) & dim_digits))
 	{
-		//DIGITS_ALL_ON;
-		
-		DIGITS_ALL_OFF;
 		DIGITS_1_ON;
 		_delay_ms(del1);
 		DIGITS_1_OFF;
-		_delay_ms(del2);
+	}
+	_delay_ms(del2);
+	
+	if ((dim_counter < DIM_CUT) || !((1<<1) & dim_digits))
+	{
 		DIGITS_2_ON;
 		_delay_ms(del1);
 		DIGITS_2_OFF;
-		_delay_ms(del2);
+	}
+	_delay_ms(del2);
+	
+	if ((dim_counter < DIM_CUT) || !((1<<0) & dim_digits))
+	{
 		DIGITS_3_ON;
 		_delay_ms(del1);
 		DIGITS_3_OFF;
-		_delay_ms(del2);
-		return;
 	}
+	_delay_ms(del2);
 	
-	if ((1<<2) & dim_digits)
-	{
-		DIGITS_1_INVERT;
-	}
+	dim_counter++;
+	if (dim_counter > (DIM_CUT + DIM_CUT)) dim_counter = 0;
 	
-	if ((1<<1) & dim_digits)
-	{
-		DIGITS_2_INVERT;
-	}
-	
-	if ((1<<0) & dim_digits)
-	{
-		DIGITS_3_INVERT;
-	}
 }
 
 void cycle_display_state(void)
@@ -302,12 +319,15 @@ void second_tick_task(void)
 void update_display(void)
 {
 	uint8_t current_month_addr;
+	uint8_t tmp;
 	switch(display_sate)
 	{
 		case 0:
 			ds1307_read(0x00, display_bcd, 3);	// [Seconds, Minutes, Hours]
 			display_bcd[2] &= ~(1<<6); // Remove 12/24 from Hours
-			display_bcd[0] &= ~(1<<7); // Remove CH from Seconds			
+			display_bcd[0] &= ~(1<<7); // Remove CH from Seconds
+			
+			dim_digits = 0;			
 			break;
 		case 1:
 			switch(setup_state)
@@ -315,9 +335,14 @@ void update_display(void)
 				case 0:
 					ds1307_read(0x03, display_bcd, 3); // [day of week, Day, Month]
 					
-					current_month_addr = ((display_bcd[0] & 0b00001111) - 1) * 3;
+					current_month_addr = ((display_bcd[2] & 0b00001111) - 1) * 3;
+					tmp = display_bcd[2];
+					display_bcd[2] = display_bcd[1];
+					display_bcd[1] = tmp;
 					#if defined(_DS3231_)
-					
+						
+						display_bcd[2] = display_bcd[2] & (~(1<<7));
+						
 						backlight[0] = pgm_read_byte(&(backlight_consts[current_month_addr]));
 						backlight[1] = pgm_read_byte(&(backlight_consts[current_month_addr + 1]));
 						backlight[2] = pgm_read_byte(&(backlight_consts[current_month_addr + 2]));
@@ -656,26 +681,26 @@ void time_first_setup(void)
 {
 	uint8_t tmp;
 	
-	tmp = DEC2BCD(0);	// seconds = 0
-	ds1307_write(0x00, &tmp, 1);
+	//tmp = DEC2BCD(0);	// seconds = 0
+	//ds1307_write(0x00, &tmp, 1);
+	//
+	//tmp = DEC2BCD(10);	// minutes = 40
+	//ds1307_write(0x01, &tmp, 1);
+	//
+	//tmp = DEC2BCD(4);	// hours
+	//ds1307_write(0x02, &tmp, 1);
+	//
+	//tmp = DEC2BCD(2);	// Day Of Week
+	//ds1307_write(0x03, &tmp, 1);
 	
-	tmp = DEC2BCD(10);	// minutes = 40
-	ds1307_write(0x01, &tmp, 1);
-	
-	tmp = DEC2BCD(4);	// hours
-	ds1307_write(0x02, &tmp, 1);
-	
-	tmp = DEC2BCD(2);	// Day Of Week
-	ds1307_write(0x03, &tmp, 1);
-	
-	tmp = DEC2BCD(8);	// Day
+	tmp = DEC2BCD(10);	// Day
 	ds1307_write(0x04, &tmp, 1);
 	
 	tmp = DEC2BCD(3);	// Month
 	ds1307_write(0x05, &tmp, 1);
 	
 	tmp = DEC2BCD(16);	// year
-	ds1307_write(0x04, &tmp, 1);
+	ds1307_write(0x06, &tmp, 1);
 	
 }
 #endif
