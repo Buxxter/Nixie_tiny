@@ -184,12 +184,6 @@
     <Compile Include="spi\shift_reg.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="spi\usi_spi.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="spi\usi_spi.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="tiny_uart\uart_text_io.c">
       <SubType>compile</SubType>
     </Compile>

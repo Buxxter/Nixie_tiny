@@ -10,6 +10,7 @@
 //#define _BACKLIGHT_AND_ // gnd
 #define _BACKLIGHT_KAT_ // +5
 //#define _BACKLIGHT_SETUP_
+//#define _SHIFT_REVERSE_
 
 
 

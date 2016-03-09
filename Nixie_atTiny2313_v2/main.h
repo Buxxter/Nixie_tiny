@@ -5,8 +5,8 @@
 
 #define F_CPU 8000000UL
 #include <compat/deprecated.h>
-#include "tiny_uart/uart_text_io.h"
-//#include "cbuf/cbuf.h"
+#include <stdint.h>
+#include <stdbool.h>
 
 #define DS_SQW_DDR	DDRD
 #define DS_SQW_PORT PORTD
@@ -16,8 +16,16 @@
 #define SPI_SS_ST_DDR	DDRA
 #define SPI_SS_ST_PIN	0
 
-#define SPI_SS_LOW		SPI_SS_ST_PORT &= (~(1<<SPI_SS_ST_PIN))
-#define SPI_SS_HIGH		SPI_SS_ST_PORT |= ((1<<SPI_SS_ST_PIN))
+#define SPI_MO_DS_PORT	PORTA
+#define SPI_MO_DS_DDR	DDRA
+#define SPI_MO_DS_PIN	1
+
+#define SPI_SC_SH_PORT	PORTD
+#define SPI_SC_SH_DDR	DDRD
+#define SPI_SC_SH_PIN	2
+
+//#define SPI_SS_LOW		SPI_SS_ST_PORT &= (~(1<<SPI_SS_ST_PIN))
+//#define SPI_SS_HIGH		SPI_SS_ST_PORT |= ((1<<SPI_SS_ST_PIN))
 
 #define MAX_CMD_LEN 16
 
@@ -30,6 +38,7 @@ void update_display(void);
 void init(void);
 void hardware_timers_init(void);
 void update_backlight(void);	// (uint8_t red, uint8_t green, uint8_t blue);
+void digits_dimmer(void);
 
 void flush_tx(void);
 

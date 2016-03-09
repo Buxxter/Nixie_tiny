@@ -57,8 +57,15 @@ void shift_sendbyte(uint8_t byte, bool isFrist, bool isLast)
 
 void shift_send_three_reverse_bytes(uint8_t *bytes)
 {
-	for (uint8_t b = 0; b < 3; b++)
-	{
-		shift_sendbyte(~(bytes[b]), b==0, b == 2);
-	}
+	#if defined(_SHIFT_REVERSE_)
+		for (uint8_t b = 0; b < 3; b++)
+		{
+			shift_sendbyte((bytes[b]), b==0, b == 2);
+		}
+	#else
+		for (uint8_t b = 3; b > 0; b--)
+		{
+			shift_sendbyte((bytes[b-1]), b == 3, b == 1);
+		}
+	#endif
 }

@@ -14,8 +14,9 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <avr/wdt.h>
-#include <stdint.h>
-#include <stdbool.h>
+
+#include <util/delay.h>
+
 
 #include "spi/shift_reg.h"
 //#include "spi/usi_spi.h"
@@ -23,6 +24,8 @@
 #include "ds1307/at24c32.h"
 #include "rtos/rtos.h"
 //#include "cmd/cmd_interp.h"
+//#include "tiny_uart/uart_text_io.h"
+//#include "cbuf/cbuf.h"
 
 #endif // _INCLUDES_
 
@@ -30,19 +33,19 @@
 #ifdef _DEFINES_
 
 #define DISPLAY_TIMEOUT		5	// In MainTimer cycles
-#define DISPLAY_DATE_EVERY	13	// In MainTimer cycles
+#define DISPLAY_DATE_EVERY	255	// In MainTimer cycles
 
 #define DIGITS_1_PORT	PORTD
-#define DIGITS_2_PORT	PORTA
-#define DIGITS_3_PORT	PORTA
-
+#define DIGITS_2_PORT	PORTD
+#define DIGITS_3_PORT	PORTD
+//
 #define DIGITS_1_DDR	DDRD
-#define DIGITS_2_DDR	DDRA
-#define DIGITS_3_DDR	DDRA
-
-#define DIGITS_1_PIN	PIND4
-#define DIGITS_2_PIN	PINA0
-#define DIGITS_3_PIN	PINA1
+#define DIGITS_2_DDR	DDRD
+#define DIGITS_3_DDR	DDRD
+//
+#define DIGITS_1_PIN	PIND0
+#define DIGITS_2_PIN	PIND4
+#define DIGITS_3_PIN	PIND5
 
 #endif
 
@@ -52,7 +55,17 @@
 #define DIGITS_2_INVERT		DIGITS_2_PORT ^= (1<<DIGITS_2_PIN)
 #define DIGITS_3_INVERT		DIGITS_3_PORT ^= (1<<DIGITS_3_PIN)
 
-#define DIGITS_ALL_ON		DIGITS_1_PORT |= (1<<DIGITS_1_PIN); DIGITS_2_PORT |= (1<<DIGITS_2_PIN); DIGITS_3_PORT |= (1<<DIGITS_3_PORT)
+#define DIGITS_1_ON			DIGITS_1_PORT |= (1<<DIGITS_1_PIN)
+#define DIGITS_2_ON			DIGITS_2_PORT |= (1<<DIGITS_2_PIN)
+#define DIGITS_3_ON			DIGITS_3_PORT |= (1<<DIGITS_3_PIN)
+
+#define DIGITS_1_OFF		DIGITS_1_PORT &= ~(1<<DIGITS_1_PIN)
+#define DIGITS_2_OFF		DIGITS_2_PORT &= ~(1<<DIGITS_2_PIN)
+#define DIGITS_3_OFF		DIGITS_3_PORT &= ~(1<<DIGITS_3_PIN)
+
+
+#define DIGITS_ALL_ON		DIGITS_1_ON; DIGITS_2_ON; DIGITS_3_ON
+#define DIGITS_ALL_OFF		DIGITS_1_OFF; DIGITS_2_OFF; DIGITS_3_OFF
 
 #define DEC2BCD(dec) (((dec / 10) << 4) + (dec % 10))
 
@@ -65,6 +78,7 @@ uint8_t backlight[3] = {255,255,255};
 volatile bool next_second = false;
 uint8_t display_sate = 1; // 0 - time, 1 - date, 2 - custom
 uint8_t setup_state = 0; // 0 - normal, 1 - Year, 2 - month, 3 - day, 4 - day of week, 5 - hours, 6 - minutes
+uint8_t dim_digits = 0;
 
 //uint8_t current_month = 1;
 
@@ -105,6 +119,8 @@ ISR(TIMER1_CAPT_vect)
 	TimerService();
 }
 
+#ifdef _UART_TIO_H_
+
 ISR(USART_RX_vect)
 {
 	uint8_t rx_byte = UDR;
@@ -122,6 +138,10 @@ ISR(USART_RX_vect)
 		AddTask(execute_command);
 	}
 }
+
+#endif
+
+#ifdef _UART_TIO_H_
 
 ISR(USART_UDRE_vect)
 {
@@ -142,6 +162,8 @@ ISR(USART_UDRE_vect)
 	#endif
 	
 }
+
+#endif
 
 #endif
 
@@ -167,12 +189,59 @@ int main(void)
 		wdt_reset();
 		TaskManager();
 		
-		#if defined(CBUF_H)
-			if (!cbf_isempty(&Tx_buffer))	UCSRB |= (1<<UDRIE);
-		#elif defined(FIFO_H_)
-			if (!FIFO_IS_EMPTY(Tx_buffer))  UCSRB |= (1<<UDRIE);
-		#endif	
+		#ifdef _UART_TIO_H_
+
+			#if defined(CBUF_H)
+				if (!cbf_isempty(&Tx_buffer))	UCSRB |= (1<<UDRIE);
+			#elif defined(FIFO_H_)
+				if (!FIFO_IS_EMPTY(Tx_buffer))  UCSRB |= (1<<UDRIE);
+			#endif	
+		
+		#endif // _UART_TIO_H_
+		
+		digits_dimmer();
+		
     }
+}
+
+void digits_dimmer(void)
+{
+	uint8_t del1 = 1;
+	uint8_t del2 = 1;
+	if (dim_digits == 0) 
+	{
+		//DIGITS_ALL_ON;
+		
+		DIGITS_ALL_OFF;
+		DIGITS_1_ON;
+		_delay_ms(del1);
+		DIGITS_1_OFF;
+		_delay_ms(del2);
+		DIGITS_2_ON;
+		_delay_ms(del1);
+		DIGITS_2_OFF;
+		_delay_ms(del2);
+		DIGITS_3_ON;
+		_delay_ms(del1);
+		DIGITS_3_OFF;
+		_delay_ms(del2);
+		return;
+	}
+	
+	if ((1<<2) & dim_digits)
+	{
+		DIGITS_1_INVERT;
+	}
+	
+	if ((1<<1) & dim_digits)
+	{
+		DIGITS_2_INVERT;
+	}
+	
+	if ((1<<0) & dim_digits)
+	{
+		DIGITS_3_INVERT;
+	}
 }
 
 void cycle_display_state(void)
@@ -198,7 +267,7 @@ void second_tick_task(void)
 	// 0 - normal, 1 - Year, 2 - month, 3 - day, 4 - day of week, 5 - hours, 6 - minutes
 	{
 		case 0:	// normal
-			DIGITS_ALL_ON;
+			//DIGITS_ALL_ON;
 			update_display();
 			break;
 		case 1:	// Year
@@ -220,7 +289,7 @@ void second_tick_task(void)
 			DIGITS_3_INVERT;
 			break;
 		default:
-			DIGITS_ALL_ON;
+			//DIGITS_ALL_ON;
 			update_display();
 			break;
 	}
@@ -260,6 +329,9 @@ void update_display(void)
 					#elif defined(_DS1307_)
 						ds1307_read((0x08) + current_month_addr, backlight, 3);
 					#endif
+					
+					dim_digits |= (1<<0);
+					
 					break;
 				case 4: // day of week
 					ds1307_read(0x03, display_bcd, 1); // [day of week]
@@ -303,6 +375,10 @@ void init(void)
 		usi_spi_send_receive(0xFF);
 		SPI_SS_HIGH;
 	#endif
+	
+	DIGITS_1_DDR |= (1<<DIGITS_1_PIN);
+	DIGITS_2_DDR |= (1<<DIGITS_2_PIN);
+	DIGITS_3_DDR |= (1<<DIGITS_3_PIN);
 		
 	
 	cbi(DS_SQW_DDR, DS_SQW_PIN); // configure as input
@@ -311,7 +387,11 @@ void init(void)
 	
 	hardware_timers_init();	
 	ds1307_init();
+	
+	#ifdef _UART_TIO_H_
 	TIO_Init();
+	#endif // _UART_TIO_H_
+	
 	
 	rtos_init();
 	
@@ -429,7 +509,7 @@ void execute_command(void)
 	
 }
 
-
+#ifdef _UART_TIO_H_
 void usart_sendString(uint8_t *string)
 {
 	#if defined(FIFO_H_)
@@ -448,6 +528,7 @@ void usart_sendString(uint8_t *string)
 	#endif
 	
 }
+#endif
 
 #ifdef _COMMENT_
 void parse_input_char(uint8_t rx_byte)
@@ -575,19 +656,22 @@ void time_first_setup(void)
 {
 	uint8_t tmp;
 	
-	tmp = DEC2BCD(47);	// minutes = 40
+	tmp = DEC2BCD(0);	// seconds = 0
+	ds1307_write(0x00, &tmp, 1);
+	
+	tmp = DEC2BCD(10);	// minutes = 40
 	ds1307_write(0x01, &tmp, 1);
 	
-	tmp = DEC2BCD(17);	// hours
+	tmp = DEC2BCD(4);	// hours
 	ds1307_write(0x02, &tmp, 1);
 	
-	tmp = DEC2BCD(7);	// Day Of Week
+	tmp = DEC2BCD(2);	// Day Of Week
 	ds1307_write(0x03, &tmp, 1);
 	
-	tmp = DEC2BCD(28);	// Day
+	tmp = DEC2BCD(8);	// Day
 	ds1307_write(0x04, &tmp, 1);
 	
-	tmp = DEC2BCD(2);	// Month
+	tmp = DEC2BCD(3);	// Month
 	ds1307_write(0x05, &tmp, 1);
 	
 	tmp = DEC2BCD(16);	// year
