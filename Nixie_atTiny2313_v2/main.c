@@ -32,8 +32,8 @@
 
 #ifdef _DEFINES_
 
-#define DISPLAY_TIMEOUT		5	// In MainTimer cycles
-#define DISPLAY_DATE_EVERY	17	// In MainTimer cycles
+#define DISPLAY_TIMEOUT		2	// In MainTimer cycles
+#define DISPLAY_DATE_EVERY	29	// In MainTimer cycles
 
 #define DIGITS_1_PORT	PORTD
 #define DIGITS_2_PORT	PORTD
