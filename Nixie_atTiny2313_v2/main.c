@@ -211,25 +211,7 @@ void digits_dimmer(void)
 	
 	uint8_t del1 = 1;
 	uint8_t del2 = 1;
-	//if (dim_digits == 0) 
-	//{
-		////DIGITS_ALL_ON;
-		//
-		//DIGITS_ALL_OFF;
-		//DIGITS_1_ON;
-		//_delay_ms(del1);
-		//DIGITS_1_OFF;
-		//_delay_ms(del2);
-		//DIGITS_2_ON;
-		//_delay_ms(del1);
-		//DIGITS_2_OFF;
-		//_delay_ms(del2);
-		//DIGITS_3_ON;
-		//_delay_ms(del1);
-		//DIGITS_3_OFF;
-		//_delay_ms(del2);
-		//return;
-	//}
+
 	
 	DIGITS_ALL_OFF;	
 	if ((dim_counter < DIM_CUT) || !((1<<2) & dim_digits))
@@ -478,62 +460,6 @@ void update_backlight(void)			// (uint8_t red, uint8_t green, uint8_t blue)
 	OCR1B =	backlight[2]; // blue;
 }
 
-void execute_command(void)
-{
-	#ifdef _COMMENT_
-
-	uint8_t cmd_args[3];
-	uint8_t args_count = 0;
-	uint8_t cmd_name[5];
-	
-	uint8_t i = 0;
-	while (i < 4 && !FIFO_IS_EMPTY(Rx_buffer) && (' ' != FIFO_PEEK(Rx_buffer)))
-	{
-		cmd_name[i] = FIFO_GET(Rx_buffer);
-		i++;
-	}
-	cmd_name[i] = 0;
-	
-	args_count = FIFO_COUNT(Rx_buffer);
-	if (args_count != 7 && args_count != 2) 
-	{
-		FIFO_FLUSH(Rx_buffer);
-		return;
-	}
-	
-	// remove space
-	FIFO_GET(Rx_buffer);
-	args_count--;
-	
-		
-	
-	if (str_equal(cmd_name, "day") && (args_count == 1))
-	{
-		cmd_args[0] = FIFO_GET(Rx_buffer) - '0';
-		ds1307_write(0x03, cmd_args, 1);
-	} else
-	{
-		cmd_args[2] =	((FIFO_GET(Rx_buffer) - '0')<<4);
-		cmd_args[2] |=	(FIFO_GET(Rx_buffer) - '0');
-		cmd_args[1] =	((FIFO_GET(Rx_buffer) - '0')<<4);
-		cmd_args[1] |=	(FIFO_GET(Rx_buffer) - '0');
-		cmd_args[0] =	((FIFO_GET(Rx_buffer) - '0')<<4);
-		cmd_args[0] |=	(FIFO_GET(Rx_buffer) - '0');
-		
-		//uint8_t addr;
-		if (str_equal(cmd_name, "date"))
-		{		
-			ds1307_write(0x04, cmd_args, 3);
-		} else if (str_equal(cmd_name, "time"))
-		{
-			ds1307_write(0x00, cmd_args, 3);
-		}
-		
-	}
-#endif
-	
-}
-
 #ifdef _UART_TIO_H_
 void usart_sendString(uint8_t *string)
 {
@@ -555,125 +481,6 @@ void usart_sendString(uint8_t *string)
 }
 #endif
 
-#ifdef _COMMENT_
-void parse_input_char(uint8_t rx_byte)
-{
-	static uint8_t cmd_input_state = 0;
-	
-	switch (cmd_input_state)
-	{
-		case 0: // 1st byte
-			switch(rx_byte)
-			{
-				case 'd':
-					cmd_input_state = 1; // will be date | day
-					break;
-				case 't':
-					cmd_input_state = 51; // will be time
-					break;
-				default: // space, backspace or something else not character
-					if (rx_byte > 0x21)
-					{
-						cmd_input_state = 231; // unknown, goto help
-					}
-					break;
-			}
-			break;
-		
-		//////////////////////////////////////////////////////////////////////////
-		// date
-		//////////////////////////////////////////////////////////////////////////
-		case 1: // 2st byte date
-			switch(rx_byte)
-			{
-				case 'a': // ok
-					cmd_input_state = 2;
-					break;
-				case 0x08: // backspace
-					cmd_input_state = 0;
-					break;
-				default: 
-					cmd_input_state = 232; // unknown, goto help
-					break;
-			}
-			break;	
-		case 2: // 3rd byte date | day
-			switch (rx_byte)
-			{
-				case 't': // ok, it's date
-					cmd_input_state = 3;
-					break;
-				case 'y': // ok, it's day
-					cmd_input_state = 103;
-					break;
-				case 0x08: // backspace
-					cmd_input_state = 0;
-					break;
-				default:
-					cmd_input_state = 233; // unknown, goto help
-					break;
-			}
-			break;
-		case 3:
-			switch (rx_byte)
-			{
-				case 'e': // ok, it's still date
-					cmd_input_state = 4;
-					break;
-				case 0x08: // backspace
-					cmd_input_state = 2;
-					break;
-				default:
-					cmd_input_state = 234; // unknown, goto help
-					break;
-			}
-			break;
-		case 4:
-			switch (rx_byte)
-			{
-				case ' ': // ok, goto args[0]
-					cmd_name[0] = 'd';
-					cmd_name[1] = 'a';
-					cmd_name[2] = 't';
-					cmd_name[3] = 'e';
-					cmd_name[4] = 0;
-					cmd_input_state = 200; 
-					break;
-				case 0x08: // backspace
-					cmd_input_state = 3;
-					break;
-				default:
-					cmd_input_state = 235; // unknown, goto help
-					break;
-			}
-			break;
-		
-		
-		//////////////////////////////////////////////////////////////////////////
-		// day
-		//////////////////////////////////////////////////////////////////////////
-		case 104:
-			case ' ': // ok, goto args[0]
-				cmd_name[0] = 'd';
-				cmd_name[1] = 'a';
-				cmd_name[2] = 'y';
-				cmd_name[3] = 0;
-				cmd_name[4] = 0;
-				cmd_input_state = 200;
-				break;
-			case 0x08: // backspace
-				cmd_input_state = 2;
-				break;
-			default:
-				cmd_input_state = 234; // unknown, goto help
-				break;
-				
-		
-		
-			
-	}
-}
-#endif
 
 
 #ifdef _TIME_HARD_SETUP_

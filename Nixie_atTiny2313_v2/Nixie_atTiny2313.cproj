@@ -133,18 +133,6 @@
     <Compile Include="cbuf\fifo.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="cmd\cmd_interp.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="cmd\cmd_interp.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="cmd\cmd_util.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="cmd\cmd_util.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="ds1307\at24c32.c">
       <SubType>compile</SubType>
     </Compile>
@@ -193,7 +181,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="cbuf\" />
-    <Folder Include="cmd" />
     <Folder Include="ds1307\" />
     <Folder Include="rtos" />
     <Folder Include="spi" />
